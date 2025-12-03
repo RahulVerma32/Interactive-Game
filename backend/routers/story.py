@@ -8,7 +8,7 @@ from db.database import get_db, SessionLocal
 from models.story import Story, StoryNode
 from models.job import StoryJob
 from schemas.story import (
-    CompleteStoryResponse, CompleteStoryNodeResponse, CreateStoryRequest
+    CompleteStoryResponse, CompleteStoryNodeResponse, CreateStoryRequest, StoryListItem
 )
 from schemas.job import StoryJobResponse
 from core.story_generator import StoryGenerator
@@ -113,8 +113,16 @@ def build_complete_story_tree(db: Session, story: Story) -> CompleteStoryRespons
     return CompleteStoryResponse(
         id=story.id,
         title= story.title,
+        theme=story.theme,
         session_id=story.session_id,
         created_at=story.created_at,
         root_node=node_dict[root_node.id],
         all_nodes=node_dict
     )
+
+
+@router.get("", response_model=list[StoryListItem])
+def list_stories(db: Session = Depends(get_db)):
+    """Get all stories ordered by most recent first"""
+    stories = db.query(Story).order_by(Story.created_at.desc()).all()
+    return stories

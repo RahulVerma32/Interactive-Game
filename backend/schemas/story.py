@@ -24,6 +24,7 @@ class CompleteStoryNodeResponse(StoryNodeBase):
 
 class StoryBase(BaseModel):
     title: str
+    theme: Optional[str] = None
     session_id: Optional[str] = None
 
     class Config:
@@ -39,6 +40,16 @@ class CompleteStoryResponse(StoryBase):
     created_at: datetime
     root_node: CompleteStoryNodeResponse
     all_nodes: Dict[int, CompleteStoryNodeResponse]
+
+    class Config:
+        from_attributes = True
+
+
+class StoryListItem(BaseModel):
+    id: int
+    title: str
+    theme: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

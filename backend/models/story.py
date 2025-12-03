@@ -10,6 +10,7 @@ class Story(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
+    theme = Column(String, index=True)
     session_id = Column(String, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

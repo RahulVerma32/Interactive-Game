@@ -52,7 +52,7 @@ class StoryGenerator:
 
         story_structure = story_parser.parse(response_text)
 
-        story_db = Story(title=story_structure.title, session_id=session_id)
+        story_db = Story(title=story_structure.title, theme=theme, session_id=session_id)
         db.add(story_db)
         db.flush()
 
