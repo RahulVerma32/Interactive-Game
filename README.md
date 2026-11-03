@@ -2,6 +2,8 @@
 
 An AI-powered choose-your-own-adventure game that generates unique, branching narratives using GitHub Models API (GPT-4o-mini). Players can explore dynamic storylines with multiple paths and endings, where every choice shapes the outcome.
 
+See [ROADMAP.md](ROADMAP.md) for the planned player-state, scene-generation, replay, sharing, and launch work.
+
 ## 🎮 Features
 
 - **AI-Generated Stories**: Dynamically created narratives with 8-10 levels of depth

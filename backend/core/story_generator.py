@@ -22,11 +22,13 @@ class StoryGenerator:
             return ChatOpenAI(
                 model="gpt-4o-mini",
                 api_key=github_token,
-                base_url="https://models.inference.ai.azure.com"
+                base_url="https://models.inference.ai.azure.com",
+                timeout=60,
+                max_retries=2,
             )
 
         # Fallback to regular OpenAI
-        return ChatOpenAI(model="gpt-4o-mini")
+        return ChatOpenAI(model="gpt-4o-mini", timeout=60, max_retries=2)
 
     @classmethod
     def generate_story(cls, db: Session, session_id: str, theme: str = "fantasy")-> Story:
@@ -56,11 +58,7 @@ class StoryGenerator:
         db.add(story_db)
         db.flush()
 
-        root_node_data = story_structure.rootNode
-        if isinstance(root_node_data, dict):
-            root_node_data = StoryNodeLLM.model_validate(root_node_data)
-
-        cls._process_story_node(db, story_db.id, root_node_data, is_root=True)
+        cls._process_story_node(db, story_db.id, story_structure.rootNode, is_root=True)
 
         db.commit()
         return story_db
@@ -69,24 +67,19 @@ class StoryGenerator:
     def _process_story_node(cls, db: Session, story_id: int, node_data: StoryNodeLLM, is_root: bool = False) -> StoryNode:
         node = StoryNode(
             story_id=story_id,
-            content=node_data.content if hasattr(node_data, "content") else node_data["content"],
+            content=node_data.content,
             is_root=is_root,
-            is_ending=node_data.isEnding if hasattr(node_data, "isEnding") else node_data["isEnding"],
-            is_winning_ending=node_data.isWinningEnding if hasattr(node_data, "isWinningEnding") else node_data["isWinningEnding"],
+            is_ending=node_data.isEnding,
+            is_winning_ending=node_data.isWinningEnding,
             options=[]
         )
         db.add(node)
         db.flush()
 
-        if not node.is_ending and (hasattr(node_data, "options") and node_data.options):
+        if not node.is_ending:
             options_list = []
             for option_data in node_data.options:
-                next_node = option_data.nextNode
-
-                if isinstance(next_node, dict):
-                    next_node = StoryNodeLLM.model_validate(next_node)
-
-                child_node = cls._process_story_node(db, story_id, next_node, False)
+                child_node = cls._process_story_node(db, story_id, option_data.nextNode, False)
 
                 options_list.append({
                     "text": option_data.text,

@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional
 from datetime import datetime
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Cookie, Response, BackgroundTasks
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,7 @@ router = APIRouter(
     prefix="/stories",
     tags=["stories"]
 )
+logger = logging.getLogger(__name__)
 
 def get_session_id(session_id: Optional[str] = Cookie(None)):
     if not session_id:
@@ -32,7 +34,7 @@ def create_story(
         session_id: str = Depends(get_session_id),
         db: Session = Depends(get_db)
 ):
-    response.set_cookie(key="session_id", value=session_id, httponly=True)
+    response.set_cookie(key="session_id", value=session_id, httponly=True, samesite="lax")
 
     job_id = str(uuid.uuid4())
 
@@ -69,22 +71,27 @@ def generate_story_task(job_id: str, theme: str, session_id: str):
 
             story = StoryGenerator.generate_story(db, session_id, theme)
 
-            job.story_id = story.id  # todo: update story id
+            job.story_id = story.id
             job.status = "completed"
             job.completed_at = datetime.now()
             db.commit()
-        except Exception as e:
+        except Exception:
+            db.rollback()
+            logger.exception("Story generation failed for job %s", job_id)
+            job = db.query(StoryJob).filter(StoryJob.job_id == job_id).first()
             job.status = "failed"
             job.completed_at = datetime.now()
-            job.error = str(e)
+            job.error = "Story generation failed. Please try again."
             db.commit()
     finally:
         db.close()
 
 
 @router.get("/{story_id}/complete", response_model=CompleteStoryResponse)
-def get_complete_story(story_id: int, db: Session = Depends(get_db)):
-    story = db.query(Story).filter(Story.id == story_id).first()
+def get_complete_story(story_id: int, session_id: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
+    if not session_id:
+        raise HTTPException(status_code=404, detail="Story not found")
+    story = db.query(Story).filter(Story.id == story_id, Story.session_id == session_id).first()
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
@@ -113,7 +120,6 @@ def build_complete_story_tree(db: Session, story: Story) -> CompleteStoryRespons
     return CompleteStoryResponse(
         id=story.id,
         title= story.title,
-        session_id=story.session_id,
         created_at=story.created_at,
         root_node=node_dict[root_node.id],
         all_nodes=node_dict

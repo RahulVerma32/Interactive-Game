@@ -22,7 +22,7 @@ function StoryLoader() {
         setError(null)
 
         try {
-            const response = await axios.get(`${API_BASE_URL}/stories/${storyId}/complete`)
+            const response = await axios.get(`${API_BASE_URL}/stories/${storyId}/complete`, {withCredentials: true})
             setStory(response.data)
             setLoading(false)
         } catch (err) {
