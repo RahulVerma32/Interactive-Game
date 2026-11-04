@@ -295,6 +295,14 @@ button:hover {
   transform: translateY(-2px);
 }
 
+.option-btn.selected, .option-btn.selected:hover {
+  background: #e9e3ff;
+  border-color: #7662c7;
+  box-shadow: 0 0 0 2px #7662c7;
+  color: #302252;
+}
+.option-btn:focus-visible, .next-btn:focus-visible { outline: 3px solid #9d8ae2; outline-offset: 3px; }
+
 .story-ending {
   text-align: center;
   margin-top: 2rem;
@@ -339,19 +347,10 @@ button:hover {
   border-top: 1px solid #eee;
 }
 
-.reset-btn {
-  background-color: #f0f0f0;
-  color: #666;
-}
-
-.reset-btn:hover {
-  background-color: #e0e0e0;
-}
-
 .story-header-actions { display: flex; justify-content: flex-end; margin-bottom: .5rem; }
 .replay-btn { background: #f2effb; color: #6551ad; border: 1px solid #ded5f3; font-size: .9rem; }
 .replay-btn:hover { background: #e7e0f8; }
-.story-controls { justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.story-controls { justify-content: flex-end; align-items: center; flex-wrap: wrap; }
 .scene-navigation { display: flex; gap: .75rem; }
 .previous-btn { background: #f0f0f0; color: #555; }
 .previous-btn:hover { background: #e2e2e2; }
@@ -529,6 +528,7 @@ body { background: #f8f7f4; color: #23253c; }
 [data-theme="dark"] .story-header h2, [data-theme="dark"] .story-options h3, [data-theme="dark"] .loading-container h2 { color: #c8b9f4; }
 [data-theme="dark"] .option-btn { background: #302d3c; color: #eae8f2; border-color: #4b435d; }
 [data-theme="dark"] .option-btn:hover { background: #403750; }
+[data-theme="dark"] .option-btn.selected, [data-theme="dark"] .option-btn.selected:hover { background: #493b67; border-color: #baa8ff; box-shadow: 0 0 0 2px #baa8ff; color: #fff; }
 @media (max-width: 650px) { .home-layout { grid-template-columns: 1fr; min-height: calc(100vh - 70px); } .history-sidebar { order: 2; border-right: 0; border-top: 1px solid #e8e6e1; padding: 24px 0; } .home-main { min-height: 52vh; padding: 50px 0; } .welcome-content h1 { font-size: 34px; } }
 .hearts { margin-top: .75rem; font-size: 1.45rem; letter-spacing: .15em; line-height: 1; }
 .heart-full { color: #d35b70; }

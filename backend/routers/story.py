@@ -286,8 +286,8 @@ def choose_option(story_id: int, request: ChoiceRequest, session_id: str = Depen
 
 
 
-def reset_progress(db, story, session_id, target_id, version):
-    """Move saved progress to a checkpoint and restore hearts atomically."""
+def restart_progress(db, story, session_id, target_id, version):
+    """Restart saved progress and restore hearts atomically."""
     progress_id = advance_progress(db, story, session_id, target_id, version)
     heart_state = db.get(PlaythroughHearts, progress_id)
     if heart_state:
@@ -304,19 +304,4 @@ def restart_story(story_id: int, request: ProgressRequest, session_id: str = Dep
     root = db.query(StoryNode).filter_by(story_id=story.id, is_root=True).first()
     if not root:
         raise HTTPException(status_code=500, detail="Story root node not found")
-    return reset_progress(db, story, session_id, root.id, request.version)
-
-
-@router.post("/{story_id}/reset-chapter")
-def reset_chapter(story_id: int, request: ProgressRequest, session_id: str = Depends(current_user), db: Session = Depends(get_db)):
-    story = owned_story(db, story_id, session_id)
-    progress = db.query(Playthrough).filter_by(story_id=story.id, session_id=session_id).first()
-    root = db.query(StoryNode).filter_by(story_id=story.id, is_root=True).first()
-    if not root:
-        raise HTTPException(status_code=500, detail="Story root node not found")
-    current_id = progress.current_node_id if progress else root.id
-    current_chapter = db.get(ChapterNode, current_id)
-    checkpoint = (db.query(ChapterNode).filter_by(chapter_id=current_chapter.chapter_id, position=1).first()
-                  if current_chapter else None)
-    target_id = checkpoint.node_id if checkpoint else root.id
-    return reset_progress(db, story, session_id, target_id, request.version)
+    return restart_progress(db, story, session_id, root.id, request.version)

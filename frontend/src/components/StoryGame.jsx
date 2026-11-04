@@ -13,6 +13,7 @@ function StoryGame({ story, onNewStory, onReload }) {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [selectedOption, setSelectedOption] = useState(null)
   const [visited, setVisited] = useState(() => [story.current_node_id || story.root_node.id])
   const [viewIndex, setViewIndex] = useState(0)
   const currentNodeId = visited[visited.length - 1]
@@ -28,6 +29,7 @@ function StoryGame({ story, onNewStory, onReload }) {
     setNotice('')
     try {
       const { data } = await api.post(`${API_BASE_URL}/stories/${story.id}/${action}`, { ...payload, version })
+      setSelectedOption(null)
       if (!story.all_nodes[data.current_node_id]) {
         await onReload()
         return
@@ -65,17 +67,16 @@ function StoryGame({ story, onNewStory, onReload }) {
         <p>{currentNode.content}</p>
         {currentNode.is_ending ? <div className="story-ending"><h3>{currentNode.is_winning_ending ? 'Congratulations' : 'The End'}</h3><p>Your adventure has ended.</p></div> :
           <div className="story-options"><h3>What will you do?</h3><div className="options-list">
-            {(viewingPast ? currentNode.options : displayedOptions).map((option) => <button key={option.id || option.number} type="button" onClick={() => saveProgress('choice', { node_id: currentNodeId, option_number: option.number })} className="option-btn" disabled={busy || viewingPast}>{option.text}</button>)}
+            {(viewingPast ? currentNode.options : displayedOptions).map((option) => <button key={option.id || option.number} type="button" onClick={() => { setSelectedOption(option.number); setNotice('') }} className={`option-btn${!viewingPast && selectedOption === option.number ? ' selected' : ''}`} aria-pressed={!viewingPast && selectedOption === option.number} disabled={busy || viewingPast}>{option.text}</button>)}
           </div></div>}
       </div>
       {viewingPast && <p className="history-notice" role="status">Reviewing an earlier scene. Return to your current scene to make a choice.</p>}
       {notice && <p className="heart-notice" role="status">{notice}</p>}
       {error && <div className="error-message" role="alert"><p>{error}</p><button type="button" onClick={onReload}>Reload story</button></div>}
       <div className="story-controls">
-        <button type="button" onClick={() => saveProgress('reset-chapter', {})} className="reset-btn" disabled={busy} title="Restart your current chapter and restore your hearts. The story remains saved." aria-label="Reset: restart your current chapter and restore your hearts; the story remains saved">Reset</button>
         <div className="scene-navigation">
-          <button type="button" className="previous-btn" disabled={busy || viewIndex === 0} onClick={() => setViewIndex(index => index - 1)}>← Previous</button>
-          <button type="button" className="next-btn" disabled={busy || !viewingPast} onClick={() => setViewIndex(index => index + 1)} title={viewingPast ? 'Go forward to a scene you have visited' : 'Choose an option to continue the story'}>Next →</button>
+          <button type="button" className="previous-btn" disabled={busy || viewIndex === 0} onClick={() => { setSelectedOption(null); setViewIndex(index => index - 1) }}>← Previous</button>
+          <button type="button" className="next-btn" disabled={busy || (!viewingPast && (currentNode.is_ending || selectedOption === null))} onClick={() => viewingPast ? setViewIndex(index => index + 1) : saveProgress('choice', { node_id: currentNodeId, option_number: selectedOption })} title={viewingPast ? 'Go forward to a scene you have visited' : 'Select an option and press Next to continue'}>Next →</button>
         </div>
       </div>
       {onNewStory && <button type="button" onClick={onNewStory} className="new-story-btn">New Story</button>}

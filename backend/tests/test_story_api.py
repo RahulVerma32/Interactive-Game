@@ -98,7 +98,7 @@ class StoryAccessTests(unittest.TestCase):
             self.assertEqual(list_stories("nobody", db), [])
 
     def test_hearts_persist_and_reset_at_chapter_checkpoint(self):
-        from routers.story import get_complete_story, get_current_chapter, choose_option, restart_story, reset_chapter
+        from routers.story import get_complete_story, get_current_chapter, choose_option, restart_story
         from schemas.story import ChoiceRequest, ProgressRequest
         with self.sessions() as db, patch.object(settings, "GEMINI_API_KEY", "test-key"), patch.object(StoryGenerator, "_generate_gemini_chapter", return_value=valid_chapter()):
             story = StoryGenerator.generate_story(db, "owner", "test")
@@ -133,15 +133,8 @@ class StoryAccessTests(unittest.TestCase):
             self.assertEqual((current, result["hearts"]), (chapter_start, 3))
             result = choose_option(story.id, ChoiceRequest(node_id=current, option_number=1, version=version), "owner", db)
             version = result["version"]
-            with self.assertRaises(HTTPException):
-                reset_chapter(story.id, ProgressRequest(version=version), "other", db)
-            with self.assertRaises(HTTPException) as conflict:
-                reset_chapter(story.id, ProgressRequest(version=version - 1), "owner", db)
-            self.assertEqual(conflict.exception.status_code, 409)
-            result = reset_chapter(story.id, ProgressRequest(version=version), "owner", db)
-            self.assertEqual((result["current_node_id"], result["hearts"]), (chapter_start, 3))
             self.assertIsNotNone(db.get(Story, story.id))
-            restart_story(story.id, ProgressRequest(version=result["version"]), "owner", db)
+            restart_story(story.id, ProgressRequest(version=version), "owner", db)
             self.assertEqual(get_complete_story(story.id, "owner", db).hearts, 3)
 
     def test_generation_failure_is_safe(self):
