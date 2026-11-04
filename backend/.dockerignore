@@ -1,0 +1,12 @@
+.env
+.env.*
+.venv
+__pycache__
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+.git
+.pytest_cache
+.ruff_cache
+node_modules
