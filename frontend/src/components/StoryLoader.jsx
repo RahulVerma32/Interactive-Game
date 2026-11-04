@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import {useParams, useNavigate} from "react-router-dom"
-import axios from 'axios';
+import axios from '../api.js';
 import LoadingStatus from "./LoadingStatus.jsx";
 import StoryGame from "./StoryGame.jsx";
 import {API_BASE_URL} from "../util.js";
@@ -56,7 +56,7 @@ function StoryLoader() {
 
     if (story) {
         return <div className="story-loader">
-            <StoryGame story={story} onNewStory={createNewStory} />
+            <StoryGame key={`${story.id}-${story.progress_version}`} story={story} onNewStory={createNewStory} onReload={() => loadStory(id)} />
         </div>
     }
 }

@@ -1,12 +1,12 @@
 import {useState, useEffect, useCallback} from "react"
 import {useNavigate} from "react-router-dom";
-import axios from "axios";
+import axios from "../api.js";
 import ThemeInput from "./ThemeInput.jsx";
 import LoadingStatus from "./LoadingStatus.jsx";
 import {API_BASE_URL} from "../util.js";
 
 
-function StoryGenerator() {
+function StoryGenerator({user}) {
     const navigate = useNavigate()
     const [theme, setTheme] = useState("")
     const [jobId, setJobId] = useState(null)
@@ -68,7 +68,7 @@ function StoryGenerator() {
             pollJobStatus(job_id)
         } catch (e) {
             setLoading(false)
-            setError(`Failed to generate story: ${e.message}`)
+            setError(e.response?.data?.detail || `Failed to generate story: ${e.message}`)
         }
     }
 
@@ -86,7 +86,7 @@ function StoryGenerator() {
             <button onClick={reset}>Try Again</button>
         </div>}
 
-        {!jobId && !error && !loading && <ThemeInput onSubmit={generateStory}/>}
+        {!jobId && !error && !loading && <ThemeInput onSubmit={generateStory} user={user}/>}
 
         {loading && <LoadingStatus theme={theme} />}
     </div>

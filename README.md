@@ -1,16 +1,15 @@
 # Interactive Story Generator
 
-An AI-powered choose-your-own-adventure game that generates unique, branching narratives using GitHub Models API (GPT-4o-mini). Players can explore dynamic storylines with multiple paths and endings, where every choice shapes the outcome.
+An AI-powered choose-your-own-adventure game that generates branching narratives through the Gemini API. Players can explore multiple paths and endings, where each choice shapes the outcome.
 
-See [ROADMAP.md](ROADMAP.md) for the planned player-state, scene-generation, replay, sharing, and launch work.
 
 ## 🎮 Features
 
-- **AI-Generated Stories**: Dynamically created narratives with 8-10 levels of depth
-- **Multiple Endings**: Both winning and losing paths with varied outcomes
-- **Branching Narratives**: 2-3 choices at each decision point
+- **AI-Generated Stories**: Three chapters with ten nodes each
+- **Branching Adventures**: Choices lead through different scenes before paths rejoin
+- **Branching Narratives**: Three choices at each non-ending node
 - **Persistent Storage**: SQLite database stores all generated stories
-- **Session Management**: Track your story progress with session cookies
+- **Saved Progress**: Signed-in users can resume their story on another device
 - **Async Generation**: Background job processing for smooth user experience
 
 ## 🛠️ Tech Stack
@@ -19,7 +18,7 @@ See [ROADMAP.md](ROADMAP.md) for the planned player-state, scene-generation, rep
 - **FastAPI** - Modern Python web framework
 - **LangChain** - AI orchestration and prompt management
 - **SQLAlchemy** - ORM for database operations
-- **GitHub Models API** - Free GPT-4o-mini access via Azure
+- **Google Gemini API** - AI story generation through Google AI Studio (OpenRouter remains an optional fallback)
 - **SQLite** - Lightweight local database (PostgreSQL supported for production)
 
 ### Frontend
@@ -32,7 +31,7 @@ See [ROADMAP.md](ROADMAP.md) for the planned player-state, scene-generation, rep
 
 - **Python 3.13+** (or use `uv` for automatic version management)
 - **Node.js 18+** and npm
-- **GitHub Personal Access Token** (for GitHub Models API)
+- **Google AI Studio API key** (for story generation)
 
 ## 🚀 Getting Started
 
@@ -74,14 +73,15 @@ DEBUG=True
 # CORS Origins (add your frontend URLs)
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175
 
-# GitHub Models API Token
-GITHUB_TOKEN=your_github_token_here
+# Google AI Studio API key
+GEMINI_API_KEY=your_google_ai_studio_api_key
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
-**Get your GitHub Token:**
-1. Go to https://github.com/settings/tokens
-2. Generate a new token (classic) with appropriate scopes
-3. Copy and paste into the `.env` file
+**Get your Google AI Studio key:**
+1. Open https://aistudio.google.com/apikey and create a Gemini API key.
+2. Put the key in `backend/.env` as `GEMINI_API_KEY`. Keep it private and restart the backend.
+3. `gemini-3.5-flash-lite` has a free tier, subject to your project's limits in AI Studio. If you prefer OpenRouter, leave `GEMINI_API_KEY` empty and set `OPENROUTER_API_KEY` instead.
 
 #### Run the Backend Server
 
@@ -135,7 +135,7 @@ The frontend will start at **http://localhost:5173** (or next available port)
 
 3. **Generate Story**: Click "Generate Story" and wait for the AI to create your adventure
 
-4. **Make Choices**: Read the story content and select from 2-3 options at each step
+4. **Make Choices**: Read the story content and select from two options at each step
 
 5. **Reach an Ending**: Continue making choices until you reach a winning or losing ending
 
@@ -188,3 +188,8 @@ Interactive-Game/
 
 ### Jobs
 - `GET /api/jobs/{job_id}` - Check story generation job status
+
+
+### Chapter storage
+
+New stories contain three chapters of ten nodes each. Branches rejoin at certain points, so a single playthrough visits a subset of the 30 nodes. Choices and the current node are saved to the signed-in user's playthrough. Existing stories remain playable. The backend creates the new additive tables at startup; it does not alter existing story tables. For production, test the schema change against a database branch before restarting the backend with the new code.
